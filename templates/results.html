@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scraped Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Scraped Results</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>Average Price</th>
+                    <th>Lowest Price</th>
+                    <th>Most Common Price</th>
+                    <th>Most Common Count</th>
+                    <th>Most Common Price Links</th>
+                    <th>First Offer Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>{{ result.filename }}</td>
+                    <td>{{ result.average_price }}</td>
+                    <td>{{ result.lowest_price }}</td>
+                    <td>{{ result.most_common_price }}</td>
+                    <td>{{ result.most_common_count }}</td>
+                    <td>{{ result.most_common_price_links }}</td>
+                    <td>{{ result.first_offer_link }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
