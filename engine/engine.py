@@ -1,4 +1,5 @@
 import os
+import datetime
 import requests
 from lxml import html
 import re
@@ -9,7 +10,6 @@ from urllib.parse import urljoin
 import redis
 import json
 import pika
-from datetime import datetime
 
 redis_db = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
 
@@ -95,13 +95,10 @@ def scrape_olx(filename):
         'all_prices': prices
     }
     serialized_data = json.dumps(data)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    redis_db.hset("scraped", f"{filename}_{timestamp}", serialized_data)
 
-    # Dodajemy prefiks z datą i godziną do klucza "all_prices"
-    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    redis_key = f"all_prices:{current_time}"
-    redis_db.sadd(redis_key, *prices)
-
-    redis_db.hset("scraped", filename, serialized_data)
+    redis_db.sadd(f"all_prices:{filename}_{timestamp}", *prices)
 
     print(f"Results {filename}:")
     print(f"Srednia: {sum(prices) / len(prices)} zł")
@@ -137,7 +134,7 @@ async def concatenate_and_scrape(keyword, num_pages=10):
 
 
 async def callback(ch, method, properties, body):
-    print("Otrzymano zapytanie")
+    print("")
     data = json.loads(body)
     keyword = data.get('keyword')
     num_pages = data.get('num_pages')
@@ -145,12 +142,11 @@ async def callback(ch, method, properties, body):
         num_pages = int(num_pages)
     await concatenate_and_scrape(keyword, num_pages)
 
-
 def callback_blocking(ch, method, properties, body):
     asyncio.run(callback(ch, method, properties, body))
 
 
 channel.basic_consume(queue='scrape_task_queue', on_message_callback=callback_blocking, auto_ack=True)
 
-print(' [*] Oczekiwanie na zapytanie z aplikacji. aby wyjsc nacisnij CTRL+C')
+print(' [*] Oczekiwanie na zapytanie. Aby wyjsc wcisnij CTRL+C')
 channel.start_consuming()
