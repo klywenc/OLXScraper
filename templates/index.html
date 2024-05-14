@@ -4,15 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scrape Form</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+            color: #333;
+            font-size: 36px;
+            animation: fadeInDown 1s ease;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            animation: slideInUp 1s ease;
+        }
+
+        label {
+            font-size: 18px;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        input[type="submit"] {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <h1>Enter Keyword and Number of Pages to Scrape</h1>
-    <form action="/scrape" method="post">
-        <label for="keyword">Keyword:</label>
+    <h1 class="animate__animated animate__fadeInDown">OLX scraper</h1>
+    <form class="animate__animated animate__slideInUp" action="/scrape" method="post">
+        <label for="keyword">Wyszukaj:</label>
         <input type="text" id="keyword" name="keyword"><br><br>
-        <label for="num_pages">Number of Pages:</label>
+        <label for="num_pages">Ilość stron do przeszukania:</label>
         <input type="number" id="num_pages" name="num_pages" min="1" value="1"><br><br>
         <input type="submit" value="Submit">
     </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.animate__animated').addClass('animate__delay-1s');
+        });
+    </script>
 </body>
 </html>
