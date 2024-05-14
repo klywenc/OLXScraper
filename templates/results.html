@@ -3,38 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scraped Results</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Wyniki Scrapowania</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        #container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        canvas {
+            margin: 20px auto;
+            display: block;
+        }
+
+        .metric {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Scraped Results</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>Filename</th>
-                    <th>Average Price</th>
-                    <th>Lowest Price</th>
-                    <th>Most Common Price</th>
-                    <th>Most Common Count</th>
-                    <th>Most Common Price Links</th>
-                    <th>First Offer Link</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in results %}
-                <tr>
-                    <td>{{ result.filename }}</td>
-                    <td>{{ result.average_price }}</td>
-                    <td>{{ result.lowest_price }}</td>
-                    <td>{{ result.most_common_price }}</td>
-                    <td>{{ result.most_common_count }}</td>
-                    <td>{{ result.most_common_price_links }}</td>
-                    <td>{{ result.first_offer_link }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div id="container">
+        <h1>Wyniki Scrapowania</h1>
+
+        <div style="text-align: center;">
+            <label for="minPrice">Minimalna cena:</label>
+            <input type="number" id="minPrice" name="minPrice" step="0.01" value="0" placeholder="Minimalna cena">
+            <label for="maxPrice">Maksymalna cena:</label>
+            <input type="number" id="maxPrice" name="maxPrice" step="0.01" value="0" placeholder="Maksymalna cena">
+            <button onclick="updateChartWithCustomRange()">Aktualizuj</button>
+        </div>
+
+        <div style="text-align: center;">
+            <label for="binCount">Liczba przedziałów cenowych:</label>
+            <input type="range" id="binCount" name="binCount" min="1" max="100" value="100">
+            <span id="binCountValue">100</span>
+        </div>
+
+        <canvas id="priceDistributionChart" width="800" height="400"></canvas>
+
+        <div class="metric" id="metricSection">
+            <h2>Metryczka</h2>
+            <p>Liczba danych: <span id="dataCount">0</span></p>
+            <p>Cena minimalna: <span id="minPriceMetric">0</span></p>
+            <p>Cena maksymalna: <span id="maxPriceMetric">0</span></p>
+            <p>Średnia cena: <span id="avgPriceMetric">0</span></p>
+        </div>
     </div>
+
+    <script>
+        var newest_prices = [1, 2, 3, 4, 5]; 
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var prices = newest_prices;
+
+            function calculateAverage(prices) {
+                var sum = prices.reduce((a, b) => a + b, 0);
+                return sum / prices.length;
+            }
+
+            function assignPriceRanges(prices, numBins, minPrice, maxPrice) {
+                minPrice = parseFloat(minPrice);
+                maxPrice = parseFloat(maxPrice);
+                var binSize = (maxPrice - minPrice) / numBins;
+                var priceRanges = Array.from({ length: numBins }, (_, i) => ({
+                    min: minPrice + i * binSize,
+                    max: minPrice + (i + 1) * binSize,
+                    label: `$${(minPrice + i * binSize).toFixed(2)} - $${(minPrice + (i + 1) * binSize).toFixed(2)}`
+                }));
+                var counts = new Array(numBins).fill(0);
+                prices.forEach(price => {
+                    for (var i = 0; i < numBins; i++) {
+                        if (price >= priceRanges[i].min && price < priceRanges[i].max) {
+                            counts[i]++;
+                            break;
+                        }
+                    }
+                });
+                return { priceRanges, counts };
+            }
+
+            function updateMetric(prices, priceRanges, counts) {
+                var dataCount = prices.length;
+                var minPrice = Math.min(...prices);
+                var maxPrice = Math.max(...prices);
+                var avgPrice = calculateAverage(prices).toFixed(2);
+
+                document.getElementById('dataCount').textContent = dataCount;
+                document.getElementById('minPriceMetric').textContent = minPrice.toFixed(2);
+                document.getElementById('maxPriceMetric').textContent = maxPrice.toFixed(2);
+                document.getElementById('avgPriceMetric').textContent = avgPrice;
+            }
+
+            var binCountInput = document.getElementById('binCount');
+            var binCountValue = document.getElementById('binCountValue');
+
+            binCountInput.addEventListener('input', function() {
+                var numBins = parseInt(this.value);
+                binCountValue.textContent = numBins;
+                var minPrice = parseFloat(document.getElementById('minPrice').value);
+                var maxPrice = parseFloat(document.getElementById('maxPrice').value);
+                var { priceRanges, counts } = assignPriceRanges(prices, numBins, minPrice, maxPrice);
+                updateChart(priceRanges, counts);
+            });
+
+            function updateChart(priceRanges, counts) {
+                var data = {
+                    labels: priceRanges.map(range => range.label),
+                    datasets: [{
+                        label: 'Liczba danych w przedziale cenowym',
+                        data: counts,
+                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                        borderWidth: 2,
+                    }]
+                };
+
+                var options = {
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Liczba danych'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Przedział cenowy'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuad'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    onClick: function(evt) {
+                        var activePoints = myChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+                        var firstPoint = activePoints[0];
+                        if (firstPoint) {
+                            var label = myChart.data.labels[firstPoint.index];
+                            console.log(`Clicked on ${label}`);
+                        }
+                    }
+                };
+
+                var ctx = document.getElementById('priceDistributionChart').getContext('2d');
+                if (window.myChart) {
+                    window.myChart.destroy(); 
+                }
+                window.myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: options
+                });
+
+                updateMetric(prices, priceRanges, counts);
+            }
+
+            function updateChartWithCustomRange() {
+                var minPrice = parseFloat(document.getElementById('minPrice').value);
+                var maxPrice = parseFloat(document.getElementById('maxPrice').value);
+                var numBins = parseInt(document.getElementById('binCount').value);
+                var { priceRanges, counts } = assignPriceRanges(prices, numBins, minPrice, maxPrice);
+                updateChart(priceRanges, counts);
+            }
+
+            var { priceRanges, counts } = assignPriceRanges(prices, 100, 0, 0); 
+            updateChart(priceRanges, counts);
+        });
+    </script>
 </body>
 </html>
