@@ -73,7 +73,7 @@
     </div>
 
     <script>
-        var newest_prices = [1, 2, 3, 4, 5]; 
+        var newest_prices = {{ newest_prices | safe }}.map(Number);
 
         document.addEventListener("DOMContentLoaded", function() {
             var prices = newest_prices;
@@ -194,7 +194,7 @@
                 updateChart(priceRanges, counts);
             }
 
-            var { priceRanges, counts } = assignPriceRanges(prices, 100, 0, 0); 
+            var { priceRanges, counts } = assignPriceRanges(prices, 100, 0, Math.max(...prices)); 
             updateChart(priceRanges, counts);
         });
     </script>
