@@ -1,7 +1,9 @@
 # Dockerized OLX Scraper Application
-```author
-Alan Kalkowski
-```
+#### By Alan Kalkowski
+#### Student Project / Projekt Studencki
+#### Parallel and distributed processing / Przetwarzanie równoległe i rozproszone
+
+
 
 This guide explains how to set up and run each component of the OLX Scraper application in separate Docker containers. It also includes documentation on how to interact with the application.
 
