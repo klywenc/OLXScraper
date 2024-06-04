@@ -1,4 +1,7 @@
 # Dockerized OLX Scraper Application
+```author
+Alan Kalkowski
+```
 
 This guide explains how to set up and run each component of the OLX Scraper application in separate Docker containers. It also includes documentation on how to interact with the application.
 
